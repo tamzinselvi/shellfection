@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+mpv --shuffle --loop=inf --fs --no-audio --really-quiet -vo caca $YOUTUBE_PLAYLIST

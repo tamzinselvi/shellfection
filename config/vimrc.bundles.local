@@ -1,0 +1,7 @@
+" custom bundles go here
+Plugin 'mfukar/robotframework-vim'
+Plugin 'aperezdc/vim-template'
+Plugin 'Shougo/vimproc.vim'
+Plugin 'Quramy/tsuquyomi'
+Plugin 'wavded/vim-stylus'
+Plugin 'tomlion/vim-solidity'

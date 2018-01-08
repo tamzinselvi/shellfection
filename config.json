@@ -1,0 +1,107 @@
+{
+  "symlinks": [
+    ["config/aliasrc", ".aliasrc"],
+    ["config/bash_profile", ".bash_profile"],
+    ["config/bashrc", ".bashrc"],
+    ["config/tmux.conf", ".tmux.conf"],
+    ["config/vimrc", ".vimrc"],
+    ["config/vimrc", ".config/nvim/init.vim"],
+    ["config/vimrc.bundles", ".vimrc.bundles"],
+    ["config/zshrc", ".zshrc"]
+  ],
+  "clones": [
+    ["config/aliasrc.local", ".aliasrc.local"],
+    ["config/bashrc.local", ".bashrc.local"],
+    ["config/tmux.conf.local", ".tmux.conf.local"],
+    ["config/vimrc.local", ".vimrc.local"],
+    ["config/vimrc.bundles.local", ".vimrc.bundles.local"],
+    ["config/zshrc.local", ".zshrc.local"]
+  ],
+  "themer": {
+    "colorscheme": "themer-colors-default",
+    "symlinks": [
+      ["themer/themer-tmux/themer-tmux.dark.double.v1.tmuxtheme", ".themer.tmuxtheme"],
+      ["themer/themer-vim/ThemerVim.vim", ".config/nvim/colors/themer.vim"]
+    ],
+    "svgToPngDirectories": [
+      "themer/themer-wallpaper-block-wave",
+      "themer/themer-wallpaper-octagon"
+    ]
+  },
+  "packages": {
+    "wget": {
+      "brew": "wget",
+      "apt": "wget",
+      "yum": "wget"
+    },
+    "tmux": {
+      "brew": "tmux",
+      "apt": "tmux",
+      "yum": "tmux"
+    },
+    "reattach-to-user-namespace": {
+      "brew": "reattach-to-user-namespace"
+    },
+    "mpv": {
+      "brew": "mpv --with-libcaca"
+    },
+    "neovim": {
+      "brew": "neovim",
+      "apt": "neovim",
+      "yum": "neovim"
+    },
+    "cmatrix": {
+      "brew": "cmatrix",
+      "apt": "cmatrix",
+      "yum": "cmatrix"
+    },
+    "the_silver_searcher": {
+      "brew": "the_silver_searcher",
+      "apt": "the_silver_searcher",
+      "yum": "the_silver_searcher"
+    },
+    "tig": {
+      "brew": "tig",
+      "apt": "tig",
+      "yum": "tig"
+    },
+    "pandoc": {
+      "brew": "pandoc",
+      "apt": "pandoc",
+      "yum": "pandoc"
+    },
+    "lynx": {
+      "brew": "lynx",
+      "apt": "lynx",
+      "yum": "lynx"
+    },
+    "zsh": {
+      "brew": "zsh",
+      "apt": "zsh",
+      "yum": "zsh"
+    },
+    "python": {
+      "brew": "python",
+      "apt": "python",
+      "yum": "python"
+    },
+    "fftw": {
+      "brew": "fftw",
+      "apt": "fftw",
+      "yum": "fftw"
+    },
+    "ncurses": {
+      "brew": "ncurses",
+      "apt": "ncurses",
+      "yum": "ncurses"
+    }
+  },
+  "pip": {
+    "Pillow": {
+      "version": "5.0.0"
+    },
+    "drawille": {
+      "version": "0.1.0"
+    }
+  }
+}

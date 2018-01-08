@@ -1,0 +1,10 @@
+# vim: filetype=zsh
+
+# Local settings go here
+
+# oh-my-zsh
+export ZSH=~/.oh-my-zsh
+ZSH_THEME="odin"
+plugins=(git)
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+source $ZSH/oh-my-zsh.sh

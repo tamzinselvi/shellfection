@@ -1,0 +1,108 @@
+# vim: filetype=zsh
+
+# {{{ Program aliases
+# readme
+function readme(){
+  if [ -z "$1" ]; then
+    file="README.md"
+  else
+    file=$1
+  fi
+
+  pandoc $file | lynx -stdin
+}
+
+function http(){
+  if [ "$1" != "" ]; then
+    python -m SimpleHTTPServer $1
+  else
+    python -m SimpleHTTPServer 1337
+  fi
+}
+# }}}
+
+# things to ignore
+alias rm=' rm'
+
+# vim aliases
+alias vi='vim'
+alias vio='vim -O'
+alias vir='vim -R'
+
+# ls aliases
+alias la='ls -A'
+alias ll='ls -lh'
+alias lla='ls -lhA'
+
+# cd aliases
+function cdl(){
+  if [ -n "$1" ]; then
+    cd "$1"
+  else
+    cd
+  fi
+  ls
+}
+
+alias cdd='cdl ~/Desktop/'
+
+#screen aliases
+alias t='tmux'
+alias tls='tmux ls'
+alias ta='tmux attach'
+
+#git aliases
+gitdifftig() {
+  git diff $1 | tig
+}
+
+gitremovemerged() {
+  git branch --merged $1 | grep -v $1 | xargs git branch -d
+}
+
+alias g='git'
+alias gi='git init'
+alias gs='git status'
+alias ga='git add'
+alias gaa='git add -A'
+alias gac='git add -A; git commit'
+alias grmm=gitremovemerged
+alias gf='git fetch --prune'
+alias gr='git rebase'
+alias grm='git rebase origin/master'
+alias gc='git commit'
+alias gb='git branch'
+alias gk='git checkout'
+alias gkm='git checkout master'
+alias gkd='git checkout develop'
+alias gkb='git checkout -b'
+alias gds='git diff --stat HEAD~1'
+alias gp='git push'
+alias gpo='git push origin'
+alias gpom='git push origin master'
+alias gm='git merge'
+alias gmm='git merge --no-ff'
+alias gd=gitdifftig
+alias gl='tig'
+alias gg='git log --graph --oneline --all'
+
+# rsync aliases
+alias pcp='rsync -arhP'
+alias pmv='rsync -arhP --remove-source-files'
+
+# misc aliases
+alias less='less -r'
+alias grep='grep --color=auto'
+alias tree='tree -ACFr'
+alias grind='valgrind --tool=memcheck --leak-check=full --show-reachable=yes --read-var-info=yes'
+alias browse='nautilus --no-desktop "$PWD" &>/dev/null &!'
+alias socks='ssh -fND'
+alias ping-scan='nmap -sP -PE -R'
+alias port-scan='nmap -p'
+# }}}
+
+# {{{ Local
+source ~/.aliasrc.local
+# }}}
+
+export TERM=xterm-256color

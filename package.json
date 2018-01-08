@@ -1,0 +1,63 @@
+{
+  "name": "shellfection",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "engines": {
+    "node": ">=6.11"
+  },
+  "author": "tomselvi",
+  "scripts": {
+    "build": "eslint src && babel --out-dir lib src",
+    "test": "npm run build && jest",
+    "start": "watch 'npm run test' src",
+    "prepare": "npm run build"
+  },
+  "bin": {
+    "shellfection": "./bin/shellfection",
+    "shellfection-cube": "./bin/shellfection-cube",
+    "shellfection-game-of-life": "./bin/shellfection-game-of-life",
+    "shellfection-mpv-playlist": "./bin/shellfection-mpv-playlist",
+    "shellfection-screensavers": "./bin/shellfection-screensavers",
+    "shellfection-welcome": "./bin/shellfection-welcome",
+    "pipeseroni-pipes": "./bin/pipeseroni-pipes"
+  },
+  "license": "MIT",
+  "jest": {
+    "rootDir": "lib"
+  },
+  "dependencies": {
+    "babel-cli": "^6.18.0",
+    "babel-plugin-inline-json-import": "^0.2.1",
+    "babel-preset-env": "^1.5.2",
+    "cli-spinner": "^0.2.7",
+    "colors": "^1.1.2",
+    "command-exists": "^1.2.2",
+    "commander": "^2.12.2",
+    "eslint": "^3.12.2",
+    "jest": "^18.1.0",
+    "lodash": "^4.17.4",
+    "svg-to-png": "^3.1.2",
+    "themer": "^2.2.4",
+    "themer-colors-github-universe": "^1.0.0",
+    "themer-iterm": "^1.0.5",
+    "themer-tmux": "^1.0.3",
+    "themer-vim": "^2.2.8",
+    "themer-wallpaper-block-wave": "^2.0.2",
+    "themer-wallpaper-octagon": "^2.0.2",
+    "user-home": "^2.0.0"
+  },
+  "bugs": {
+    "url": "https://github.com/tomselvi/shellfection/issues"
+  },
+  "homepage": "https://github.com/tomselvi/shellfection#readme",
+  "directories": {
+    "lib": "lib"
+  },
+  "keywords": [
+    "shellfection",
+    "tmux",
+    "neovim",
+    "zsh"
+  ]
+}

@@ -1,0 +1,259 @@
+#!/usr/bin/env python
+try:
+    from PIL import Image
+except:
+    from sys import stderr, exit
+    stderr.write('[E] PIL not installed')
+    exit(1)
+import curses, os
+import math
+from drawille import Canvas
+from StringIO import StringIO
+import urllib2
+from sys import stdout
+import locale
+import re
+from subprocess import check_output
+from subprocess import Popen, PIPE, STDOUT
+import os
+import random
+
+os.system('stty -g > ~/.currentTtySettings')
+
+locale.setlocale(locale.LC_ALL,"")
+
+screen = curses.initscr()
+curses.start_color()
+
+curses.init_pair(1, 232, curses.COLOR_WHITE)
+
+def getTerminalSize():
+    import os
+    env = os.environ
+
+    def ioctl_GWINSZ(fd):
+        import fcntl
+        import termios
+        import struct
+        cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ, '1234'))
+        return cr
+    cr = ioctl_GWINSZ(0) or ioctl_GWINSZ(1) or ioctl_GWINSZ(2)
+    if not cr:
+        try:
+            fd = os.open(os.ctermid(), os.O_RDONLY)
+            cr = ioctl_GWINSZ(fd)
+            os.close(fd)
+        except:
+            pass
+    if not cr:
+        cr = (env.get('LINES', 25), env.get('COLUMNS', 80))
+    return int(cr[1]), int(cr[0])
+
+def image2term(image=None, threshold=128, ratio=None, invert=False):
+    #if image.startswith('http://') or image.startswith('https://'):
+    #    i = Image.open(StringIO(urllib2.urlopen(image).read())).convert('L')
+    #else:
+    #    i = Image.open(open(image)).convert('L')
+    i = image
+    w, h = i.size
+    if ratio:
+        w = int(w * ratio)
+        h = int(h * ratio)
+        i = i.resize((w, h), Image.ANTIALIAS)
+    else:
+        tw, th = getTerminalSize()
+        tw *= 2
+        th *= 2
+        if True:#tw < w:
+            ratio = tw / float(w)
+            w = tw
+            h = int(h * ratio)
+            i = i.resize((w, h), Image.ANTIALIAS)
+    can = Canvas()
+    x = y = 0
+
+    try:
+         i_converted = i.tobytes()
+    except AttributeError:
+         i_converted = i.tostring()
+
+    for pix in i_converted:
+        if invert:
+            if ord(pix) > threshold:
+                can.set(x, y)
+        else:
+            if ord(pix) < threshold:
+                can.set(x, y)
+        x += 1
+        if x >= w:
+            y += 1
+            x = 0
+    return can.frame(0, 0)
+
+curses.noecho()
+curses.curs_set(0)
+screen.keypad(1)
+selected = 0
+d = os.listdir(os.path.expanduser('~') + "/.settings/images")
+pattern = re.compile(".*(jpg|png)")
+d = [f for f in d if pattern.match(f)]
+f = random.choice(d)
+
+image = Image.open(open(os.path.expanduser('~') + "/.settings/images/" + f)).convert('L')
+header = {'image': image2term(image)}
+
+def addstr(y, x, string, attr = 1):
+    try:
+        screen.addstr(y, x, string, attr)
+    except:
+        pass
+
+def gui(resize=False, redraw_image=False):
+    if resize: header['image'] = image2term(image)
+    max_y, max_x = screen.getmaxyx()
+    active = True
+
+    if redraw_image:
+        screen.clear()
+        header_lines = header['image'].split("\n")
+        all_pad = True
+        pad = 0
+        for x in range(0, len(header_lines)):
+            if all_pad:
+                if header_lines[x].strip() == "":
+                    pad += 1
+                else:
+                    all_pad = False
+        header_lines = header_lines[pad:]
+        all_pad = True
+        pad = 0
+        for x in reversed(range(0, len(header_lines))):
+            if all_pad:
+                if header_lines[x].strip() == "":
+                    pad += 1
+                else:
+                    all_pad = False
+        if pad < 0: header_lines = header_lines[:-pad]
+        if len(header_lines) < max_y:
+            i = int((max_y-len(header_lines))/2.0)
+        else:
+            if len(header_lines) > max_y:
+                header_lines = header_lines[int((len(header_lines)-max_y)/2.0):]
+            i = 0
+
+        for line in header_lines:
+            if i < max_y:
+                addstr(i, 0, line[:-1])
+                i += 1
+
+    i = int(max_y/float(2))
+    try:
+        cmd = 'tmux ls'
+        p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+        tmux_ls = p.stdout.read().strip()
+    except:
+        tmux_ls = "No tmux sessions active!"
+        active = False
+
+    pattern = re.compile("no server running on.*$")
+    if pattern.match(tmux_ls):
+        active = False
+    tmux_ls_lines = tmux_ls.split("\n")
+
+    y = 0
+    for line in tmux_ls_lines:
+        if len(line) > max_x: line = line[:max_x-3] + "..."
+        if y == selected: addstr(i, max_x/2-len(line)/2, line, curses.color_pair(1) | curses.A_BOLD | curses.A_STANDOUT)
+        else: addstr(i, max_x/2-len(line)/2, line)
+        i += 1
+        y += 1
+
+    i += 2
+    if active:
+        line = "PRESS space/enter TO LOAD"
+        if len(line) > max_x: line = line[:max_x-3] + "..."
+        addstr(i, max_x/2-len(line)/2, line, curses.A_BOLD | curses.A_STANDOUT)
+        i += 2
+    line = "PRESS c TO CREATE"
+    if len(line) > max_x: line = line[:max_x-3] + "..."
+    addstr(i, max_x/2-len(line)/2, line, curses.A_BOLD | curses.A_STANDOUT)
+    i += 2
+    if active:
+        line = "PRESS x TO KILL"
+        if len(line) > max_x: line = line[:max_x-3] + "..."
+        addstr(i, max_x/2-len(line)/2, line, curses.A_BOLD | curses.A_STANDOUT)
+        i += 2
+    line = "PRESS q TO EXIT"
+    if len(line) > max_x: line = line[:max_x-3] + "..."
+    addstr(i, max_x/2-len(line)/2, line, curses.A_BOLD | curses.A_STANDOUT)
+
+gui(redraw_image=True)
+
+while True:
+    event = screen.getch()
+    if event == ord("q"):
+        screen.clear()
+        screen.refresh()
+        break
+    if event == ord("c"):
+        tmux = check_output(["which", "tmux"]).strip()
+        os.execv(tmux, [tmux])
+    elif event == curses.KEY_UP:
+        try:
+            cmd = 'tmux ls'
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            tmux_ls = p.stdout.read().strip()
+        except:
+            tmux_ls = "No tmux sessions active!"
+        tmux_ls_lines = tmux_ls.split("\n")
+        selected -= 1
+        if selected < 0: selected = len(tmux_ls_lines) - 1
+        gui()
+    elif event == curses.KEY_DOWN:
+        try:
+            cmd = 'tmux ls'
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            tmux_ls = p.stdout.read().strip()
+        except:
+            tmux_ls = "No tmux sessions active!"
+        tmux_ls_lines = tmux_ls.split("\n")
+        selected += 1
+        if selected > len(tmux_ls_lines) - 1: selected = 0
+        gui()
+    elif event == curses.KEY_RESIZE:
+        gui(resize=True, redraw_image=True)
+    elif event == ord("x"):
+        try:
+            cmd = 'tmux ls'
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            tmux_ls = p.stdout.read().strip()
+        except:
+            tmux_ls = "No tmux sessions active!"
+
+        pattern = re.compile("no server running on.*$")
+        if not pattern.match(tmux_ls):
+            tmux_ls_lines = tmux_ls.split("\n")
+            tmux_load = tmux_ls_lines[selected]
+            m = re.match('([a-zA-Z0-9\-]*):.*', tmux_load)
+            check_output(["tmux", "kill-session", "-t", m.group(1)])
+            if selected > len(tmux_ls_lines) - 2: selected = len(tmux_ls_lines) - 2
+            if selected < 0: selected = 0
+            gui(redraw_image=True)
+    elif event == ord(" ") or event == curses.KEY_ENTER or event == ord("\n"):
+        try:
+            cmd = 'tmux ls'
+            p = Popen(cmd, shell=True, stdin=PIPE, stdout=PIPE, stderr=STDOUT, close_fds=True)
+            tmux_ls = p.stdout.read().strip()
+        except:
+            tmux_ls = "No tmux sessions active!"
+
+        pattern = re.compile("no server running on.*$")
+        if not pattern.match(tmux_ls):
+            tmux_ls_lines = tmux_ls.split("\n")
+            tmux_load = tmux_ls_lines[selected]
+            m = re.match('([a-zA-Z0-9\-]*):.*', tmux_load)
+            tmux = check_output(["which", "tmux"]).strip()
+            os.execv(tmux, [tmux, "attach", "-t", m.group(1)])
+
+
+os.system('stty `cat ~/.currentTtySettings`')

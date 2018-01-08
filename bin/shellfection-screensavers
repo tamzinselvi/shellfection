@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Useful variables
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Screensaver commands go here
+PIPE_COUNT=$(($RANDOM%5+1))
+TYPES=$(($RANDOM%8+1))
+PIPES="pipeseroni-pipes -p $PIPE_COUNT -t $TYPES"
+
+COLORS=( "red" "green" "yellow" "blue" "magenta" "cyan" "white" "black" )
+COLOR=${COLORS[$RANDOM % ${#COLORS[@]} ]}
+BOLDS=( "" "b" )
+BOLD=${BOLDS[$RANDOM % ${#BOLDS[@]} ]}
+ASYNCS=( "" "a" )
+ASYNC=${ASYNCS[$RANDOM % ${#ASYNCS[@]} ]}
+
+CMATRIX="cmatrix -s$BOLD$ASYNC -C $COLOR"
+
+CUBE="shellfection-cube"
+
+GAMEOFLIFE="shellfection-game-of-life"
+
+ASCIIQUARIUM="asciiquarium"
+
+MPV_PLAYLIST="shellfection-mpv-playlist"
+
+VIS="vis"
+
+# Map screensavers here
+SCREENSAVERS=( "$PIPES" "$CMATRIX" "$GAMEOFLIFE" "$CUBE" "$ASCIIQUARIUM" "$MPV_PLAYLIST" "$VIS" )
+
+# Pick random screensaver from list
+SCREENSAVER=${SCREENSAVERS[$RANDOM % ${#SCREENSAVERS[@]} ]}
+$SCREENSAVER
