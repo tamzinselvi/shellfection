@@ -25,7 +25,8 @@
     ],
     "svgToPngDirectories": [
       "themer/themer-wallpaper-block-wave",
-      "themer/themer-wallpaper-octagon"
+      "themer/themer-wallpaper-octagon",
+      "themer/themer-wallpaper-triangles"
     ]
   },
   "packages": {

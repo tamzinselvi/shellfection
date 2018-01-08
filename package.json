@@ -39,12 +39,15 @@
     "lodash": "^4.17.4",
     "svg-to-png": "^3.1.2",
     "themer": "^2.2.4",
+    "themer-chrome": "^1.0.2",
     "themer-colors-github-universe": "^1.0.0",
     "themer-iterm": "^1.0.5",
+    "themer-slack": "^1.0.5",
     "themer-tmux": "^1.0.3",
     "themer-vim": "^2.2.8",
     "themer-wallpaper-block-wave": "^2.0.2",
     "themer-wallpaper-octagon": "^2.0.2",
+    "themer-wallpaper-triangles": "^2.0.2",
     "user-home": "^2.0.0"
   },
   "bugs": {

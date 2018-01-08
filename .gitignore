@@ -1,3 +1,4 @@
 node_modules
 lib
 themer
+.DS_Store
