@@ -153,7 +153,7 @@ export const installThemer = (options, spinner) => {
     spinner.start()
     spinner.setSpinnerTitle("building themer...".blue)
 
-    exec(`$(npm bin)/themer -c ${themer.colorscheme} -t themer-tmux -t themer-vim -t themer-iterm -t themer-wallpaper-octagon -t themer-wallpaper-triangles -t themer-chrome -t themer-slack -t themer-wallpaper-block-wave -o themer`, (err) => {
+    exec(`$(npm bin)/themer -c ${themer.colorscheme} -t themer-tmux -t themer-vim -t themer-iterm -t themer-wallpaper-octagon -t themer-wallpaper-triangles -t themer-chrome -t themer-slack -t themer-intellij -t themer-wallpaper-block-wave -o themer`, (err) => {
       if (err) {
         reject(err)
       }
