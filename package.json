@@ -42,6 +42,7 @@
     "themer-chrome": "^1.0.2",
     "themer-colors-github-universe": "^1.0.0",
     "themer-iterm": "^1.0.5",
+    "themer-jetbrains": "^1.0.1",
     "themer-slack": "^1.0.5",
     "themer-tmux": "^1.0.3",
     "themer-vim": "^2.2.8",
