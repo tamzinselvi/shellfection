@@ -35,6 +35,7 @@
     "command-exists": "^1.2.2",
     "commander": "^2.12.2",
     "eslint": "^3.12.2",
+    "gists": "^2.0.0",
     "jest": "^18.1.0",
     "lodash": "^4.17.4",
     "svg-to-png": "^3.1.2",

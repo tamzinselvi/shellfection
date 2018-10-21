@@ -1,8 +1,12 @@
 {
+  "casks": [],
+  "gist": "",
+  "gists": {},
   "symlinks": [
     ["config/aliasrc", ".aliasrc"],
     ["config/bash_profile", ".bash_profile"],
     ["config/bashrc", ".bashrc"],
+    ["config/env", ".env"],
     ["config/tmux.conf", ".tmux.conf"],
     ["config/vimrc", ".vimrc"],
     ["config/vimrc", ".config/nvim/init.vim"],
@@ -12,6 +16,7 @@
   "clones": [
     ["config/aliasrc.local", ".aliasrc.local"],
     ["config/bashrc.local", ".bashrc.local"],
+    ["config/env.local", ".env.local"],
     ["config/tmux.conf.local", ".tmux.conf.local"],
     ["config/vimrc.local", ".vimrc.local"],
     ["config/vimrc.bundles.local", ".vimrc.bundles.local"],

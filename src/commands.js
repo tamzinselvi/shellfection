@@ -1,8 +1,10 @@
 import "colors"
 import fs from "fs"
+import readline from "readline"
 import * as _ from "lodash"
 import svgToPng from "svg-to-png"
 import userHome from "user-home"
+const Gists = require("gists")
 import { exec } from "child_process"
 
 import * as util from "./util"
@@ -11,13 +13,153 @@ import defaultConfig from "../config.json"
 
 let config = defaultConfig
 
-if (fs.existsSync(`${userHome}/.shellfection`)) {
-  const userConfig = JSON.parse(fs.readFileSync(`${userHome}/.shellfection`))
+if (fs.existsSync(`${userHome}/.shellfection.json`)) {
+  const userConfig = JSON.parse(fs.readFileSync(`${userHome}/.shellfection.json`))
 
   config = _.defaultsDeep(userConfig, defaultConfig)
 }
 
-const { clones, packages, pip, symlinks, themer } = config
+const { clones, gist, gists, packages, pip, symlinks, themer } = config
+
+async function getGistsProvider (spinner, username, password) {
+  return new Promise((resolve) => {
+    spinner.stop(true)
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+      terminal: false
+    })
+
+    if (!username) {
+      rl.question("GitHub username: ", (username) => {
+        rl.question("GitHub password: ", (password) => {
+          spinner.start()
+
+          resolve(new Gists({
+            username,
+            password,
+          }))
+        })
+      })
+    }
+    else {
+      spinner.start()
+
+      resolve(new Gists({
+        username,
+        password,
+      }))
+    }
+
+  })
+}
+
+export function sync(spinner) {
+  spinner.setSpinnerTitle("getting os type...".blue)
+  spinner.setSpinnerString(11)
+  spinner.start()
+
+  return util.getOSType()
+    .then((osType) => {
+      spinner.setSpinnerTitle("getting casks and packages...".blue)
+
+      return Promise.all([
+        util.getCasks(osType),
+        util.getPackages(osType),
+      ])
+    })
+    .then(([casks, packages]) => {
+      config.casks = casks
+      config.packages = _.defaultsDeep(packages, config.packages)
+
+      spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
+
+      fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(config, false, "  "))
+
+      spinner.stop(true)
+    })
+}
+
+export async function gistDownload(spinner) {
+  spinner.setSpinnerTitle("getting gist provider...".blue)
+  spinner.setSpinnerString(11)
+  spinner.start()
+
+  const gistsProvider = await getGistsProvider(spinner)
+
+  spinner.setSpinnerTitle("getting gist...".blue)
+
+  return gistsProvider.get(gist)
+    .then((res) => {
+      spinner.setSpinnerTitle("updating local files...".blue)
+
+      gists.forEach((fileName) => {
+        const match = res.body.files[fileName]
+
+        if (match) {
+          fs.writeFileSync(`${userHome}/${fileName}`, match.content)
+        }
+      })
+
+      spinner.stop(true)
+    })
+}
+
+function getEmptyFiles(fileNames) {
+  const files = {}
+
+  fileNames.forEach((fileName) => files[fileName] = null)
+
+  return files
+}
+
+function getFiles(fileNames) {
+  const files = {}
+
+  fileNames.forEach((fileName) => {
+    const fileContents = fs.readFileSync(`${userHome}/${fileName}`)
+
+    files[fileName] = {
+      filename: fileName,
+      size: fileContents.length,
+      content: fileContents.toString(),
+    }
+  })
+
+  return files
+}
+
+export async function gistUpload(spinner) {
+  spinner.setSpinnerTitle("getting gist provider...".blue)
+  spinner.setSpinnerString(11)
+  spinner.start()
+
+  const gistsProvider = await getGistsProvider(spinner)
+
+  spinner.setSpinnerTitle("clearing gist...".blue)
+
+  let options
+
+  return gistsProvider.get(gist)
+    .then((res) => {
+      options = res.body
+      const fileNames = Object.keys(res.body.files)
+      if (!fileNames.length) {
+        return Promise.resolve()
+      }
+      options.files = getEmptyFiles(fileNames)
+      return gistsProvider.edit(gist, options)
+    })
+    .then(() => {
+      spinner.setSpinnerTitle("updating gist...".blue)
+
+      options.files = getFiles(gists)
+
+      return gistsProvider.edit(gist, options)
+    })
+    .then(() => spinner.stop(true))
+}
 
 export const install = (options, spinner) => {
   spinner.setSpinnerTitle("detecting OS...".blue)
@@ -26,6 +168,12 @@ export const install = (options, spinner) => {
 
   return util.getOSType()
     .then((osType) => {
+      spinner.stop(true)
+
+      console.log(`detected ${Symbol.keyFor(osType).yellow}`.cyan)
+
+      spinner.start()
+
       spinner.setSpinnerTitle("installing packages...".blue)
 
       return util.series(Object.keys(packages).map(pkgId => () => {

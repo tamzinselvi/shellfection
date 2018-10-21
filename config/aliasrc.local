@@ -1,4 +1,3 @@
 # vim: filetype=sh
 
 # Local settings go here
-export YOUTUBE_PLAYLIST=~/.screensaver-movies

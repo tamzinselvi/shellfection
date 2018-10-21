@@ -1,8 +1,8 @@
+# Load env
+source ~/.env
+
 # Load aliases
 source ~/.aliasrc
-
-# {{{ bash settings
-# }}}
 
 # {{{ Prompt
 # {{{ Custom symbols

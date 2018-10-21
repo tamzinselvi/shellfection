@@ -13,6 +13,38 @@ program
 console.log(`${"shellfection".rainbow}`)
 
 program
+  .command("download")
+  .description("downloads configuration from gist")
+  .action(() => {
+    commands.gistDownload(spinner)
+      .then(() => {
+        console.log("complete".green)
+        process.exit(0)
+      })
+  })
+
+program
+  .command("upload")
+  .description("uploads current configuration to saved gist")
+  .action(() => {
+    commands.gistUpload(spinner)
+      .then(() => {
+        console.log("complete".green)
+        process.exit(0)
+      })
+  })
+
+program
+  .command("sync")
+  .action(() => {
+    commands.sync(spinner)
+      .then(() => {
+        console.log("complete".green)
+        process.exit(0)
+      })
+  })
+
+program
   .command("install")
   .description("installs symlinks and all missing pkgs, includes themer")
   .option("--clean", "installs symlinks regardless if they exist")

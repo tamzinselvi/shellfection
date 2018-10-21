@@ -52,6 +52,22 @@ export const getOSType = () => {
   return Promise.resolve(OSType.Unknown)
 }
 
+export const getCasks = (osType) => {
+  if (osType === OSType.Darwin) {
+    return getDarwinCasks()
+  }
+
+  return Promise.reject(new Error(`cannot get casks for "${osType}"`))
+}
+
+export const getPackages = (osType) => {
+  if (osType === OSType.Darwin) {
+    return getDarwinPackages()
+  }
+
+  return Promise.reject(new Error(`cannot get packages for "${osType}"`))
+}
+
 export const installPackage = (osType, pkg) => {
   if (osType === OSType.Darwin) {
     return installDarwinPackage(pkg)
@@ -100,6 +116,35 @@ const installDarwinPackage = (pkg) => {
       }
 
       resolve(InstallStatus.NoChanges)
+    })
+  })
+}
+
+const getDarwinCasks = () => {
+  return new Promise((resolve, reject) => {
+    exec("brew cask ls -1", (err, stdout) => {
+      if (err) {
+        reject(err)
+      }
+
+      resolve(stdout.split("\n").filter(cask => cask.length))
+    })
+  })
+}
+
+const getDarwinPackages = () => {
+  return new Promise((resolve, reject) => {
+    exec("brew ls -1", (err, stdout) => {
+      if (err) {
+        reject(err)
+      }
+      const packages = {}
+
+      stdout.split("\n").filter(pkg => pkg.length).forEach((pkg) => {
+        packages[pkg] = { brew: pkg }
+      })
+
+      resolve(packages)
     })
   })
 }
