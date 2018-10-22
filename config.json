@@ -23,7 +23,18 @@
     ["config/zshrc.local", ".zshrc.local"]
   ],
   "themer": {
-    "colorscheme": "themer-colors-default",
+    "colorscheme": "themer-colors-github-universe",
+    "templates": [
+      "themer-tmux",
+      "themer-vim",
+      "themer-iterm",
+      "themer-wallpaper-octagon", 
+      "themer-wallpaper-triangles",
+      "themer-chrome",
+      "themer-slack",
+      "themer-jetbrains",
+      "themer-wallpaper-block-wave"
+    ],
     "symlinks": [
       ["themer/themer-tmux/themer-tmux.dark.double.v1.tmuxtheme", ".themer.tmuxtheme"],
       ["themer/themer-vim/ThemerVim.vim", ".config/nvim/colors/themer.vim"]
@@ -109,5 +120,6 @@
     "drawille": {
       "version": "0.1.0"
     }
-  }
+  },
+  "npm": {}
 }

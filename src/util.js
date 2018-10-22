@@ -82,6 +82,14 @@ export const installPackage = (osType, pkg) => {
   return Promise.reject(new Error(`cannot install package "${pkg.id}" on unknown OSType "${osType}"`))
 }
 
+export const installCask = (osType, cask) => {
+  if (osType === OSType.Darwin) {
+    return installDarwinCask(cask)
+  }
+
+  return Promise.reject(new Error(`cannot install cask "${cask}" on unknown OSType "${osType}"`))
+}
+
 export const series = (farr) => {
   const helper = (farr) => {
     if (!farr.length) {
@@ -107,6 +115,24 @@ const installDarwinPackage = (pkg) => {
     exec(`brew list ${pkg.brew} &>/dev/null`, (err) => {
       if (err) {
         return exec(`brew install -y ${pkg.brew}`, (err) => {
+          if (err) {
+            return resolve(InstallStatus.Failed)
+          }
+
+          resolve(InstallStatus.Installed)
+        })
+      }
+
+      resolve(InstallStatus.NoChanges)
+    })
+  })
+}
+
+const installDarwinCask = (cask) => {
+  return new Promise((resolve) => {
+    exec(`brew cask list ${cask} &>/dev/null`, (err) => {
+      if (err) {
+        return exec(`brew cask install -y ${cask}`, (err) => {
           if (err) {
             return resolve(InstallStatus.Failed)
           }

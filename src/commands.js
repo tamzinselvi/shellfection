@@ -19,7 +19,7 @@ if (fs.existsSync(`${userHome}/.shellfection.json`)) {
   config = _.defaultsDeep(userConfig, defaultConfig)
 }
 
-const { clones, gist, gists, packages, pip, symlinks, themer } = config
+const { casks, clones, gist, gists, packages, pip, symlinks, themer } = config
 
 async function getGistsProvider (spinner, username, password) {
   return new Promise((resolve) => {
@@ -200,6 +200,48 @@ export const install = (options, spinner) => {
             return installStatus
           })
       }))
+        .then((results) => [osType, results])
+    })
+    .then(([osType, results]) => {
+      const resultMap = _.countBy(
+        results,
+        (result) => Symbol.keyFor(result),
+      )
+
+      resultMap.Installed = resultMap.Installed || 0
+      resultMap.Failed = resultMap.Failed || 0
+      resultMap.NoChanges = resultMap.NoChanges || 0
+
+      spinner.stop(true)
+
+      console.log(`${"packages installed".cyan} ${resultMap.Installed.toString().green} ${"failed".cyan} ${resultMap.Failed.toString().red} ${"no changes".cyan} ${resultMap.NoChanges.toString().yellow}`)
+
+      spinner.start()
+
+      spinner.setSpinnerTitle("installing casks...".blue)
+
+      return util.series(casks.map(cask => () => {
+        spinner.setSpinnerTitle(`installing ${cask}`.blue)
+
+        return util.installCask(osType, cask)
+          .then((installStatus) => {
+            spinner.stop(true)
+
+            if (installStatus === util.InstallStatus.Installed) {
+              console.log(`${"installed".cyan} ${cask.green}`)
+            }
+            else if (installStatus === util.InstallStatus.Failed) {
+              console.log(`${"failed to install".cyan} ${cask.red}`)
+            }
+            else if (installStatus === util.InstallStatus.NoChanges) {
+              console.log(`${"no changes to".cyan} ${cask.yellow}`)
+            }
+
+            spinner.start()
+
+            return installStatus
+          })
+      }))
     })
     .then((results) => {
       const resultMap = _.countBy(
@@ -213,7 +255,7 @@ export const install = (options, spinner) => {
 
       spinner.stop(true)
 
-      console.log(`${"installed".cyan} ${resultMap.Installed.toString().green} ${"failed".cyan} ${resultMap.Failed.toString().red} ${"no changes".cyan} ${resultMap.NoChanges.toString().yellow}`)
+      console.log(`${"casks installed".cyan} ${resultMap.Installed.toString().green} ${"failed".cyan} ${resultMap.Failed.toString().red} ${"no changes".cyan} ${resultMap.NoChanges.toString().yellow}`)
 
       spinner.start()
 
@@ -301,7 +343,9 @@ export const installThemer = (options, spinner) => {
     spinner.start()
     spinner.setSpinnerTitle("building themer...".blue)
 
-    exec(`$(npm bin)/themer -c ${themer.colorscheme} -t themer-tmux -t themer-vim -t themer-iterm -t themer-wallpaper-octagon -t themer-wallpaper-triangles -t themer-chrome -t themer-slack -t themer-jetbrains -t themer-wallpaper-block-wave -o themer`, (err) => {
+    const templates = themer.templates.map(t => `-t ${t}`).join(" ")
+
+    exec(`$(npm bin)/themer -c ${themer.colorscheme} ${templates} -o themer`, (err) => {
       if (err) {
         reject(err)
       }

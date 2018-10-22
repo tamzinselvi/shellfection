@@ -13,8 +13,8 @@ program
 console.log(`${"shellfection".rainbow}`)
 
 program
-  .command("download")
-  .description("downloads configuration from gist")
+  .command("gist-download")
+  .description("downloads configuration and specified files from gist")
   .action(() => {
     commands.gistDownload(spinner)
       .then(() => {
@@ -24,8 +24,8 @@ program
   })
 
 program
-  .command("upload")
-  .description("uploads current configuration to saved gist")
+  .command("gist-upload")
+  .description("uploads current configuration and specified files to saved gist")
   .action(() => {
     commands.gistUpload(spinner)
       .then(() => {
@@ -36,6 +36,7 @@ program
 
 program
   .command("sync")
+  .description("synchronizes configuration with locally installed pacakages and casks")
   .action(() => {
     commands.sync(spinner)
       .then(() => {
