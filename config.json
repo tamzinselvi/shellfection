@@ -17,6 +17,8 @@
     ["config/aliasrc.local", ".aliasrc.local"],
     ["config/bashrc.local", ".bashrc.local"],
     ["config/env.local", ".env.local"],
+    ["config/movies", ".shellfection-movies"],
+    ["config/splashes", ".shellfection-splashes"],
     ["config/tmux.conf.local", ".tmux.conf.local"],
     ["config/vimrc.local", ".vimrc.local"],
     ["config/vimrc.bundles.local", ".vimrc.bundles.local"],

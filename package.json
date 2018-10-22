@@ -35,6 +35,7 @@
     "command-exists": "^1.2.8",
     "commander": "^2.12.2",
     "eslint": "^3.12.2",
+    "fs-extra": "^7.0.0",
     "gists": "^2.0.0",
     "jest": "^18.1.0",
     "lodash": "^4.17.11",

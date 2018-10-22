@@ -50,6 +50,7 @@ program
   .description("installs symlinks and all missing pkgs, includes themer")
   .option("--clean", "installs symlinks regardless if they exist")
   .option("--deep-clean", "installs symlinks and local configuration regardless if they exist")
+  .option("--skip-packages", "skip installing casks and packages")
   .action((options) => {
     commands.install(options, spinner)
       .then(() => console.log("complete".green))

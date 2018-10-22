@@ -94,12 +94,12 @@ curses.noecho()
 curses.curs_set(0)
 screen.keypad(1)
 selected = 0
-d = os.listdir(os.path.expanduser('~') + "/.settings/images")
+d = os.listdir(os.path.expanduser('~') + "/.shellfection-splashes")
 pattern = re.compile(".*(jpg|png)")
 d = [f for f in d if pattern.match(f)]
 f = random.choice(d)
 
-image = Image.open(open(os.path.expanduser('~') + "/.settings/images/" + f)).convert('L')
+image = Image.open(open(os.path.expanduser('~') + "/.shellfection-splashes/" + f)).convert('L')
 header = {'image': image2term(image)}
 
 def addstr(y, x, string, attr = 1):

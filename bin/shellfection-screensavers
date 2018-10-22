@@ -24,10 +24,8 @@ ASCIIQUARIUM="asciiquarium"
 
 MPV_PLAYLIST="shellfection-mpv-playlist"
 
-VIS="vis"
-
 # Map screensavers here
-SCREENSAVERS=( "$PIPES" "$CMATRIX" "$GAMEOFLIFE" "$CUBE" "$ASCIIQUARIUM" "$MPV_PLAYLIST" "$VIS" )
+SCREENSAVERS=( "$PIPES" "$CMATRIX" "$GAMEOFLIFE" "$CUBE" "$ASCIIQUARIUM" "$MPV_PLAYLIST" )
 
 # Pick random screensaver from list
 SCREENSAVER=${SCREENSAVERS[$RANDOM % ${#SCREENSAVERS[@]} ]}

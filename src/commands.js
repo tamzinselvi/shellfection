@@ -1,5 +1,6 @@
 import "colors"
 import fs from "fs"
+import fse from "fs-extra"
 import readline from "readline"
 import * as _ from "lodash"
 import svgToPng from "svg-to-png"
@@ -11,12 +12,20 @@ import * as util from "./util"
 
 import defaultConfig from "../config.json"
 
-let config = defaultConfig
+let config = _.cloneDeep(defaultConfig)
+let userConfig = {}
 
 if (fs.existsSync(`${userHome}/.shellfection.json`)) {
-  const userConfig = JSON.parse(fs.readFileSync(`${userHome}/.shellfection.json`))
+  userConfig = JSON.parse(fs.readFileSync(`${userHome}/.shellfection.json`))
 
-  config = _.defaultsDeep(userConfig, defaultConfig)
+  config.casks = _.union(defaultConfig.casks, userConfig.casks)
+  config.clones = _.unionBy(defaultConfig.clones, userConfig.clones, (o) => JSON.stringify(o))
+  config.gist = userConfig.gist
+  config.gists = _.union(defaultConfig.gists, userConfig.gists)
+  config.packages = _.merge(defaultConfig.packages, userConfig.packages)
+  config.pip = _.merge(defaultConfig.pip, userConfig.pip)
+  config.symlinks = _.unionBy(defaultConfig.symlinks, userConfig.symlinks, (o) => JSON.stringify(o))
+  config.themer = _.merge(defaultConfig.themer, userConfig.themer)
 }
 
 const { casks, clones, gist, gists, packages, pip, symlinks, themer } = config
@@ -70,12 +79,12 @@ export function sync(spinner) {
       ])
     })
     .then(([casks, packages]) => {
-      config.casks = casks
-      config.packages = _.defaultsDeep(packages, config.packages)
+      userConfig.casks = casks
+      userConfig.packages = _.merge(packages, userConfig.packages)
 
       spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
 
-      fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(config, false, "  "))
+      fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(userConfig, false, "  "))
 
       spinner.stop(true)
     })
@@ -174,6 +183,10 @@ export const install = (options, spinner) => {
 
       spinner.start()
 
+      if (options.skipPackages) {
+        return Promise.resolve([osType, []])
+      }
+
       spinner.setSpinnerTitle("installing packages...".blue)
 
       return util.series(Object.keys(packages).map(pkgId => () => {
@@ -217,6 +230,10 @@ export const install = (options, spinner) => {
       console.log(`${"packages installed".cyan} ${resultMap.Installed.toString().green} ${"failed".cyan} ${resultMap.Failed.toString().red} ${"no changes".cyan} ${resultMap.NoChanges.toString().yellow}`)
 
       spinner.start()
+
+      if (options.skipPackages) {
+        return Promise.resolve([])
+      }
 
       spinner.setSpinnerTitle("installing casks...".blue)
 
@@ -292,7 +309,7 @@ export const install = (options, spinner) => {
         const exists = fs.existsSync(`${userHome}/${to}`)
 
         if (options.deepClean && exists) {
-          fs.unlinkSync(`${userHome}/${to}`)
+          fse.removeSync(`${userHome}/${to}`)
         }
 
         if (!options.deepClean && exists) {
@@ -302,7 +319,7 @@ export const install = (options, spinner) => {
         if (!exists || options.deepClean) {
           console.log(`${"copied".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
 
-          fs.copyFileSync(`${__dirname}/../${from}`, `${userHome}/${to}`)
+          fse.copySync(`${__dirname}/../${from}`, `${userHome}/${to}`)
         }
 
         spinner.start()

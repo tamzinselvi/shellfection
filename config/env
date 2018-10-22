@@ -1,12 +1,12 @@
 # vim: filetype=sh
 
-if [ "$TERM" != "linux" ]; then                       # Set TERM, if we're not in a vty
+if [ "$TERM" != "linux" ]; then                         # Set TERM, if we're not in a vty
   export TERM="screen-256color"
 fi
 
 export EDITOR='vim'
 export PYTHONSTARTUP="$HOME/.pythonrc.py"
-export SHELLFECTION_PLAYLIST=~/.screensaver-movies     # Used by shellfection-mpv-playlist
+export SHELLFECTION_PLAYLIST=~/.shellfection-movies     # Used by shellfection-mpv-playlist
 
 # {{{ Local
 . ~/.env.local
