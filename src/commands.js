@@ -386,7 +386,7 @@ export const installThemer = (options, spinner) => {
 
     const templates = themer.templates.map(t => `-t ${t}`).join(" ")
 
-    exec(`$(npm bin)/themer -c ${themer.colorscheme} ${templates} -o themer`, (err) => {
+    exec(`themer -c ${themer.colorscheme} ${templates} -o themer`, (err) => {
       if (err) {
         reject(err)
       }
