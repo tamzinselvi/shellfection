@@ -24,11 +24,12 @@ if (fs.existsSync(`${userHome}/.shellfection.json`)) {
   config.gists = _.union(defaultConfig.gists, userConfig.gists)
   config.packages = _.merge(defaultConfig.packages, userConfig.packages)
   config.pip = _.merge(defaultConfig.pip, userConfig.pip)
+  config.npm = _.merge(defaultConfig.npm, userConfig.npm)
   config.symlinks = _.unionBy(defaultConfig.symlinks, userConfig.symlinks, (o) => JSON.stringify(o))
   config.themer = _.merge(defaultConfig.themer, userConfig.themer)
 }
 
-const { casks, clones, gist, gists, packages, pip, symlinks, themer } = config
+const { casks, clones, gist, gists, packages, pip, symlinks, themer, npm } = config
 
 async function getGistsProvider (spinner, username, password) {
   return new Promise((resolve) => {
@@ -327,10 +328,33 @@ export const install = (options, spinner) => {
 
       spinner.stop()
 
-      return installThemer(options, spinner)
+      return installNpm(options, spinner)
     })
+    .then(() => installThemer(options, spinner))
     .then(() => installPip(options, spinner))
     .catch(err => console.error(err))
+}
+
+export const installNpm = (options, spinner) => {
+  spinner.start()
+  spinner.setSpinnerTitle("installing npm packages...".blue)
+
+  return util.series(Object.keys(npm).map(pkg => () => {
+    const pkgWVersion = `${pkg}@${npm[pkg]}`
+
+    spinner.setSpinnerTitle(`${"installing".blue} ${pkgWVersion.yellow}`)
+    return util.installNpm(pkgWVersion)
+      .then(() => {
+        spinner.stop(true)
+
+        console.log(`${"installed".cyan} ${pkgWVersion.yellow}`)
+
+        spinner.start()
+      })
+  }))
+    .then(() => {
+      spinner.stop(true)
+    })
 }
 
 export const installPip = (options, spinner) => {

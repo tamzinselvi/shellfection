@@ -65,6 +65,14 @@ program
   })
 
 program
+  .command("npm")
+  .description("installs npm packages")
+  .action((options) => {
+    commands.installNpm(options, spinner)
+      .then(() => console.log("complete".green))
+  })
+
+program
   .command("themer")
   .description("builds themer, symlinks and converts labeled directories svgs to pngs")
   .action((options) => {

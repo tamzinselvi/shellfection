@@ -123,5 +123,16 @@
       "version": "0.1.0"
     }
   },
-  "npm": {}
+  "npm": {
+    "themer-colors-github-universe": "latest",
+    "themer-tmux": "latest",
+    "themer-vim": "latest",
+    "themer-iterm": "latest",
+    "themer-wallpaper-octagon": "latest",
+    "themer-wallpaper-triangles": "latest",
+    "themer-chrome": "latest",
+    "themer-slack": "latest",
+    "themer-jetbrains": "latest",
+    "themer-wallpaper-block-wave": "latest"
+  }
 }

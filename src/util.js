@@ -222,3 +222,19 @@ export const installPip = (pkg) => {
     })
   })
 }
+
+export const installNpm = (pkg) => {
+  if (!pkg) {
+    return Promise.resolve()
+  }
+
+  return new Promise((resolve, reject) => {
+    exec(`npm install -g ${pkg}`, (err) => {
+      if (err) {
+        reject(err)
+      }
+
+      resolve()
+    })
+  })
+}
