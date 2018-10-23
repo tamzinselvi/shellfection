@@ -1,5 +1,5 @@
 import * as os from "os"
-import * as ce from "command-exists"
+import ce from "command-exists"
 import { exec } from "child_process"
 
 const commandExists = (cmd) => {

@@ -39,7 +39,7 @@
     ],
     "symlinks": [
       ["themer/themer-tmux/themer-tmux.dark.double.v1.tmuxtheme", ".themer.tmuxtheme"],
-      ["themer/themer-vim/ThemerVim.vim", ".config/nvim/colors/themer.vim"]
+      ["themer/themer-vim/ThemerVim.vim", ".config/nvim/themer.vim"]
     ],
     "svgToPngDirectories": [
       "themer/themer-wallpaper-block-wave",
