@@ -10,6 +10,16 @@ Fully customizeable via configuration.
 
 ## Installation & usage
 
+This project uses npm only. Install dependencies from the tracked
+`package-lock.json`:
+
+    npm ci
+
+Build and test on Node 22 or newer:
+
+    npm run build
+    npm test
+
 Install this module wherever:
 
     npm install shellfection
