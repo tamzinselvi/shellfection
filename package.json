@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "engines": {
-    "node": ">=6.11"
+    "node": ">=22"
   },
+  "packageManager": "npm@11.13.0",
   "author": "tomselvi",
   "scripts": {
     "build": "eslint src && babel --out-dir lib src",
-    "test": "npm run build && jest",
+    "test": "npm run build && jest --runInBand",
     "start": "watch 'npm run test' src",
     "prepare": "npm run build"
   },
@@ -24,23 +25,32 @@
   },
   "license": "MIT",
   "jest": {
-    "rootDir": "lib"
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/test/**/*.test.js"
+    ],
+    "transform": {
+      "^.+\\.js$": "babel-jest"
+    }
   },
   "dependencies": {
-    "babel-cli": "^6.18.0",
-    "babel-plugin-inline-json-import": "^0.2.1",
-    "babel-preset-env": "^1.7.0",
     "cli-spinner": "^0.2.7",
     "colors": "^1.1.2",
     "command-exists": "^1.2.8",
     "commander": "^2.12.2",
-    "eslint": "^3.12.2",
     "fs-extra": "^7.0.0",
     "gists": "^2.0.0",
-    "jest": "^18.1.0",
     "lodash": "^4.17.11",
-    "svg-to-png": "^3.1.2",
+    "sharp": "^0.34.2",
     "user-home": "^2.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.27.2",
+    "@babel/core": "^7.27.4",
+    "@babel/preset-env": "^7.27.2",
+    "babel-jest": "^30.0.0",
+    "eslint": "^9.28.0",
+    "jest": "^30.0.0"
   },
   "bugs": {
     "url": "https://github.com/tomselvi/shellfection/issues"

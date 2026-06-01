@@ -3,7 +3,8 @@ import fs from "fs"
 import fse from "fs-extra"
 import readline from "readline"
 import * as _ from "lodash"
-import svgToPng from "svg-to-png"
+import path from "path"
+import sharp from "sharp"
 import userHome from "user-home"
 const Gists = require("gists")
 import { exec } from "child_process"
@@ -30,6 +31,13 @@ if (fs.existsSync(`${userHome}/.shellfection.json`)) {
 }
 
 const { casks, clones, gist, gists, packages, pip, symlinks, themer, npm } = config
+
+const convertSvgToPng = (svgPath, outputDir) => {
+  const parsedPath = path.parse(svgPath)
+  const outputPath = path.join(outputDir, `${parsedPath.name}.png`)
+
+  return sharp(svgPath).png().toFile(outputPath)
+}
 
 async function getGistsProvider (spinner, username, password) {
   return new Promise((resolve) => {
@@ -425,7 +433,7 @@ export const installThemer = (options, spinner) => {
         const svgFiles = fs.readdirSync(`${__dirname}/../${spdir}`).filter(name => /\.svg$/.test(name))
 
         return Promise.all(svgFiles.map(svgFile =>
-          svgToPng.convert(`${__dirname}/../${spdir}/${svgFile}`, `${__dirname}/../${spdir}`)
+          convertSvgToPng(`${__dirname}/../${spdir}/${svgFile}`, `${__dirname}/../${spdir}`)
         ))
       }).reduce((a, b) => a.concat(b), []))
         .then((result) => {

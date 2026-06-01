@@ -90,6 +90,17 @@ export const installCask = (osType, cask) => {
   return Promise.reject(new Error(`cannot install cask "${cask}" on unknown OSType "${osType}"`))
 }
 
+export const getInstallCommands = {
+  brewList: (pkg) => `brew list ${pkg} &>/dev/null`,
+  brewInstall: (pkg) => `brew install -y ${pkg}`,
+  brewCaskList: (cask) => `brew cask list ${cask} &>/dev/null`,
+  brewCaskInstall: (cask) => `brew cask install -y ${cask}`,
+  aptInstall: (pkg) => `apt-get install -y ${pkg}`,
+  yumInstall: (pkg) => `yum install -y ${pkg}`,
+  pipInstall: (pkg) => `pip install ${pkg}`,
+  npmGlobalInstall: (pkg) => `npm install -g ${pkg}`,
+}
+
 export const series = (farr) => {
   const helper = (farr) => {
     if (!farr.length) {
@@ -112,9 +123,9 @@ const installDarwinPackage = (pkg) => {
   }
 
   return new Promise((resolve) => {
-    exec(`brew list ${pkg.brew} &>/dev/null`, (err) => {
+    exec(getInstallCommands.brewList(pkg.brew), (err) => {
       if (err) {
-        return exec(`brew install -y ${pkg.brew}`, (err) => {
+        return exec(getInstallCommands.brewInstall(pkg.brew), (err) => {
           if (err) {
             return resolve(InstallStatus.Failed)
           }
@@ -130,9 +141,9 @@ const installDarwinPackage = (pkg) => {
 
 const installDarwinCask = (cask) => {
   return new Promise((resolve) => {
-    exec(`brew cask list ${cask} &>/dev/null`, (err) => {
+    exec(getInstallCommands.brewCaskList(cask), (err) => {
       if (err) {
-        return exec(`brew cask install -y ${cask}`, (err) => {
+        return exec(getInstallCommands.brewCaskInstall(cask), (err) => {
           if (err) {
             return resolve(InstallStatus.Failed)
           }
@@ -181,7 +192,7 @@ const installAptPackage = (pkg) => {
   }
 
   return new Promise((resolve, reject) => {
-    exec(`apt-get install -y ${pkg.apt}`, (err) => {
+    exec(getInstallCommands.aptInstall(pkg.apt), (err) => {
       if (err) {
         return reject(err)
       }
@@ -197,7 +208,7 @@ const installYumPackage = (pkg) => {
   }
 
   return new Promise((resolve, reject) => {
-    exec(`yum install -y ${pkg.yum}`, (err) => {
+    exec(getInstallCommands.yumInstall(pkg.yum), (err) => {
       if (err) {
         return reject(err)
       }
@@ -213,7 +224,7 @@ export const installPip = (pkg) => {
   }
 
   return new Promise((resolve, reject) => {
-    exec(`pip install ${pkg}`, (err) => {
+    exec(getInstallCommands.pipInstall(pkg), (err) => {
       if (err) {
         reject(err)
       }
@@ -229,7 +240,7 @@ export const installNpm = (pkg) => {
   }
 
   return new Promise((resolve, reject) => {
-    exec(`npm install -g ${pkg}`, (err) => {
+    exec(getInstallCommands.npmGlobalInstall(pkg), (err) => {
       if (err) {
         reject(err)
       }
