@@ -13,6 +13,8 @@ import * as util from "./util"
 
 import defaultConfig from "../config.json"
 
+const brewfilePath = path.join(__dirname, "../Brewfile")
+
 let config = _.cloneDeep(defaultConfig)
 let userConfig = {}
 
@@ -80,22 +82,31 @@ export function sync(spinner) {
 
   return util.getOSType()
     .then((osType) => {
+      if (osType === util.OSType.Darwin) {
+        spinner.setSpinnerTitle("writing Brewfile...".blue)
+
+        return util.dumpHomebrewBundle(osType, brewfilePath)
+          .then(() => {
+            spinner.stop(true)
+          })
+      }
+
       spinner.setSpinnerTitle("getting casks and packages...".blue)
 
       return Promise.all([
         util.getCasks(osType),
         util.getPackages(osType),
       ])
-    })
-    .then(([casks, packages]) => {
-      userConfig.casks = casks
-      userConfig.packages = _.merge(packages, userConfig.packages)
+        .then(([casks, packages]) => {
+          userConfig.casks = casks
+          userConfig.packages = _.merge(packages, userConfig.packages)
 
-      spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
+          spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
 
-      fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(userConfig, false, "  "))
+          fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(userConfig, false, "  "))
 
-      spinner.stop(true)
+          spinner.stop(true)
+        })
     })
 }
 
@@ -196,6 +207,29 @@ export const install = (options, spinner) => {
         return Promise.resolve([osType, []])
       }
 
+      if (osType === util.OSType.Darwin) {
+        spinner.setSpinnerTitle("installing Homebrew bundle...".blue)
+
+        return util.installHomebrewBundle(osType, brewfilePath)
+          .then((installStatus) => {
+            spinner.stop(true)
+
+            if (installStatus === util.InstallStatus.Installed) {
+              console.log(`${"installed".cyan} ${"Homebrew bundle".green}`)
+            }
+            else if (installStatus === util.InstallStatus.Failed) {
+              console.log(`${"failed to install".cyan} ${"Homebrew bundle".red}`)
+            }
+            else if (installStatus === util.InstallStatus.NoChanges) {
+              console.log(`${"no changes to".cyan} ${"Homebrew bundle".yellow}`)
+            }
+
+            spinner.start()
+
+            return [osType, [installStatus]]
+          })
+      }
+
       spinner.setSpinnerTitle("installing packages...".blue)
 
       return util.series(Object.keys(packages).map(pkgId => () => {
@@ -240,7 +274,7 @@ export const install = (options, spinner) => {
 
       spinner.start()
 
-      if (options.skipPackages) {
+      if (options.skipPackages || osType === util.OSType.Darwin) {
         return Promise.resolve([])
       }
 
