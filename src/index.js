@@ -47,10 +47,12 @@ program
 
 program
   .command("install")
-  .description("installs packages, dotfile symlinks, local config, themer, npm, and pip")
+  .description("installs packages, dotfile symlinks, local config, oh-my-zsh, Vundle, themer, npm, and pip")
   .option("--clean", "replace existing managed symlinks; keep existing cloned local config")
   .option("--deep-clean", "replace existing managed symlinks and cloned local config")
-  .option("--skip-packages", "skip OS package managers only; still run symlinks, local config, themer, npm, and pip")
+  .option("--force", "overwrite existing managed symlinks and cloned local config; equivalent to deep-clean for config files")
+  .option("--skip-packages", "skip OS package managers only; still run symlinks, local config, oh-my-zsh, Vundle, themer, npm, and pip")
+  .option("-v, --verbose", "disable install spinners and print command lines plus child output for setup commands")
   .action((options) => {
     commands.install(options, spinner)
       .then(() => console.log("complete".green))

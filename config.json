@@ -9,7 +9,6 @@
     ["config/env", ".env"],
     ["config/tmux.conf", ".tmux.conf"],
     ["config/vimrc", ".vimrc"],
-    ["config/vimrc", ".config/nvim/init.vim"],
     ["config/vimrc.bundles", ".vimrc.bundles"],
     ["config/zshrc", ".zshrc"]
   ],

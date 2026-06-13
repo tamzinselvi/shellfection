@@ -9,4 +9,4 @@ set colorcolumn=120
 set background=dark
 
 " color scheme
-colorscheme themer
+silent! colorscheme themer

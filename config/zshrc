@@ -27,12 +27,19 @@ bindkey "^[[A"  history-search-backward
 bindkey "^[[B"  history-search-forward
 # }}}
 
+# {{{ oh-my-zsh
+export ZSH="$HOME/.oh-my-zsh"
+ZSH_THEME="robbyrussell"
+plugins=(git)
+[ -f "$ZSH/oh-my-zsh.sh" ] && source "$ZSH/oh-my-zsh.sh"
+# }}}
+
 # {{{ Local
 . ~/.zshrc.local
 # }}}
 
 # {{{ Welcome prompt if not in TMUX
-if ! { [ -n "$TMUX" ]; } then
+if [ -z "$TMUX" ] && command -v shellfection-welcome >/dev/null 2>&1; then
   shellfection-welcome
 fi
 # }}}

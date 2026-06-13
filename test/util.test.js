@@ -3,6 +3,8 @@ jest.mock("child_process", () => ({
 }))
 
 import { exec } from "child_process"
+import fs from "fs"
+import path from "path"
 import {
   getInstallCommands,
   installHomebrewBundle,
@@ -75,5 +77,35 @@ describe("series", () => {
 
     expect(calls).toEqual(["first", "second"])
     expect(results).toEqual(["first", "second"])
+  })
+})
+
+describe("shipped shell config", () => {
+  test("guards optional welcome binary before invoking it", () => {
+    const zshrc = fs.readFileSync(path.resolve(__dirname, "../config/zshrc")).toString()
+
+    expect(zshrc).toContain("command -v shellfection-welcome >/dev/null 2>&1")
+  })
+
+  test("guards managed oh-my-zsh source without overwriting PATH", () => {
+    const zshrc = fs.readFileSync(path.resolve(__dirname, "../config/zshrc")).toString()
+
+    expect(zshrc).toContain("export ZSH=\"$HOME/.oh-my-zsh\"")
+    expect(zshrc).toContain("ZSH_THEME=\"robbyrussell\"")
+    expect(zshrc).toContain("plugins=(git)")
+    expect(zshrc).toContain("[ -f \"$ZSH/oh-my-zsh.sh\" ] && source \"$ZSH/oh-my-zsh.sh\"")
+    expect(zshrc).not.toContain("export PATH=\"/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin\"")
+  })
+
+  test("guards Vundle startup and themer colorscheme", () => {
+    const vimrc = fs.readFileSync(path.resolve(__dirname, "../config/vimrc")).toString()
+    const vimrcLocal = fs.readFileSync(path.resolve(__dirname, "../config/vimrc.local")).toString()
+
+    expect(vimrc).toContain("if isdirectory(expand('~/.vim/bundle/Vundle.vim'))")
+    expect(vimrc).toContain("set rtp+=~/.vim/bundle/Vundle.vim")
+    expect(vimrc).toContain("call vundle#begin()")
+    expect(vimrc).toContain("call vundle#end()")
+    expect(vimrc).toContain("if filereadable(expand(\"~/.vimrc.bundles.local\"))")
+    expect(vimrcLocal).toContain("silent! colorscheme themer")
   })
 })

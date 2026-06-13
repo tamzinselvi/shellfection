@@ -44,7 +44,8 @@ Install everything:
 On macOS, Homebrew packages are managed through the checked-in `Brewfile`.
 Review it before running install, or run `shellfection install --skip-packages`
 to skip only OS package manager work while still applying dotfile symlinks,
-local config clones, themer generation, npm packages, and pip packages.
+local config clones, oh-my-zsh setup, Vundle setup, themer generation, npm
+packages, and pip packages.
 
 Install flags:
 
@@ -52,11 +53,32 @@ Install flags:
   config files/directories in place.
 - `--deep-clean` replaces both existing managed symlinks and cloned local config
   files/directories.
+- `--force` overwrites existing managed symlinks and cloned local config
+  files/directories; for config files it is equivalent to `--deep-clean` and is
+  named for explicit overwrite intent.
 - `--skip-packages` skips Homebrew Bundle on macOS and apt/yum plus casks on
-  Linux; npm, pip, symlinks, local config, and themer still run.
+  Linux; npm, pip, symlinks, local config, oh-my-zsh setup, Vundle setup, and
+  themer still run.
+- `--verbose` / `-v` disables install spinners and prints setup command lines
+  plus child process output for managed external commands.
 
 User config lives at `~/.shellfection.json`. The sample
 `config/shellfection.json` shows the supported top-level keys and value types.
+
+Shellfection manages the oh-my-zsh block in its shipped `.zshrc`; do not copy
+that block into `~/.zshrc.local`. The setup command installs oh-my-zsh
+unattended when `~/.oh-my-zsh` is missing and preserves shellfection's managed
+`.zshrc`. The shipped theme is the stock `robbyrussell` theme so clean installs
+do not reference a missing custom theme.
+
+Shellfection also manages Vundle for its shipped Vim config. Setup clones
+Vundle into `~/.vim/bundle/Vundle.vim`, matching the classic Vim runtime path
+in the shipped `.vimrc`, and runs `vim` in ex/silent mode with `PluginInstall!`
+and `qall!` only when `vim` is available. Git prompts are disabled and setup
+commands have timeouts so stale plugin repos fail observably instead of hanging
+behind a spinner. Vundle plugin-install failures warn and the rest of setup
+continues. The shipped Vim files guard Vundle and the themer colorscheme so Vim
+can still open before plugins or generated theme files exist.
 
 ### Default inventory notes
 
