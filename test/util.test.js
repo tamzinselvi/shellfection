@@ -22,7 +22,7 @@ describe("getInstallCommands", () => {
     expect(getInstallCommands.brewBundleInstall("Brewfile")).toBe("brew bundle install --file Brewfile")
     expect(getInstallCommands.aptInstall("git")).toBe("apt-get install -y git")
     expect(getInstallCommands.yumInstall("git")).toBe("yum install -y git")
-    expect(getInstallCommands.pipInstall("Pillow==5.0.0")).toBe("pip install Pillow==5.0.0")
+    expect(getInstallCommands.pipInstall("sample-pkg==1.0.0")).toBe("pip install sample-pkg==1.0.0")
     expect(getInstallCommands.npmGlobalInstall("themer@2.0.0")).toBe("npm install -g themer@2.0.0")
   })
 })

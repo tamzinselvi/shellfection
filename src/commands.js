@@ -444,15 +444,17 @@ export const installThemer = (options, spinner) => {
       themer.symlinks.forEach(([from, to]) => {
         spinner.stop(true)
 
-        const exists = fs.existsSync(`${userHome}/${to}`)
+        const targetPath = path.join(userHome, to)
+        const exists = fs.existsSync(targetPath)
 
         if (exists) {
-          fs.unlinkSync(`${userHome}/${to}`)
+          fs.unlinkSync(targetPath)
         }
 
         console.log(`${"symlinked".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
 
-        fs.symlinkSync(`${__dirname}/../${from}`, `${userHome}/${to}`)
+        fs.mkdirSync(path.dirname(targetPath), { recursive: true })
+        fs.symlinkSync(path.join(__dirname, "..", from), targetPath)
 
         spinner.start()
       })

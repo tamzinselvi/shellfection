@@ -47,13 +47,14 @@ program
 
 program
   .command("install")
-  .description("installs symlinks and all missing pkgs, includes themer")
-  .option("--clean", "installs symlinks regardless if they exist")
-  .option("--deep-clean", "installs symlinks and local configuration regardless if they exist")
-  .option("--skip-packages", "skip installing casks and packages")
+  .description("installs packages, dotfile symlinks, local config, themer, npm, and pip")
+  .option("--clean", "replace existing managed symlinks; keep existing cloned local config")
+  .option("--deep-clean", "replace existing managed symlinks and cloned local config")
+  .option("--skip-packages", "skip OS package managers only; still run symlinks, local config, themer, npm, and pip")
   .action((options) => {
     commands.install(options, spinner)
       .then(() => console.log("complete".green))
+      .catch(() => process.exit(1))
   })
 
 program
