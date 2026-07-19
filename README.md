@@ -8,6 +8,11 @@ Comes preloaded with tmux, neovim, zsh & more.
 
 Fully customizeable via configuration.
 
+Package installation currently targets macOS Homebrew and Linux apt/yum.
+Windows package-manager support is not implemented; the evaluated follow-up
+direction is limited Chocolatey support for explicitly mapped packages. See
+`docs/windows-package-manager-evaluation.md`.
+
 ## Installation & usage
 
 Install this module wherever:
