@@ -10,6 +10,12 @@ Fully customizeable via configuration.
 
 ## Installation & usage
 
+Install this module wherever:
+
+    npm install shellfection
+
+### Development setup
+
 This project uses npm only. Install dependencies from the tracked
 `package-lock.json`:
 
@@ -25,10 +31,6 @@ Link the package bins locally and verify the globally linked commands:
     npm link
     shellfection --help
     shellfection-welcome
-
-Install this module wherever:
-
-    npm install shellfection
 
 Install everything:
 
