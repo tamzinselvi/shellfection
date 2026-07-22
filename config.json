@@ -1,7 +1,7 @@
 {
   "casks": [],
   "gist": "",
-  "gists": {},
+  "gists": [],
   "symlinks": [
     ["config/aliasrc", ".aliasrc"],
     ["config/bash_profile", ".bash_profile"],
@@ -9,7 +9,6 @@
     ["config/env", ".env"],
     ["config/tmux.conf", ".tmux.conf"],
     ["config/vimrc", ".vimrc"],
-    ["config/vimrc", ".config/nvim/init.vim"],
     ["config/vimrc.bundles", ".vimrc.bundles"],
     ["config/zshrc", ".zshrc"]
   ],
@@ -25,114 +24,75 @@
     ["config/zshrc.local", ".zshrc.local"]
   ],
   "themer": {
-    "colorscheme": "themer-colors-github-universe",
+    "colorscheme": "github-universe",
     "templates": [
-      "themer-tmux",
-      "themer-vim",
-      "themer-iterm",
-      "themer-wallpaper-octagon", 
-      "themer-wallpaper-triangles",
-      "themer-chrome",
-      "themer-slack",
-      "themer-jetbrains",
-      "themer-wallpaper-block-wave"
+      "tmux",
+      "vim",
+      "iterm",
+      "wallpaper-octagon",
+      "wallpaper-triangles",
+      "chrome",
+      "slack",
+      "wallpaper-block-wave"
     ],
     "symlinks": [
-      ["themer/themer-tmux/themer-tmux.dark.double.v1.tmuxtheme", ".themer.tmuxtheme"],
-      ["themer/themer-vim/ThemerVim.vim", ".config/nvim/themer.vim"]
+      ["themer/GitHub Universe/tmux/themer-tmux.dark.double.v1.tmuxtheme", ".themer.tmuxtheme"],
+      ["themer/GitHub Universe/Vim/ThemerGitHubUniverse.vim", ".vim/colors/themer.vim"]
     ],
     "svgToPngDirectories": [
-      "themer/themer-wallpaper-block-wave",
-      "themer/themer-wallpaper-octagon",
-      "themer/themer-wallpaper-triangles"
+      "themer/GitHub Universe/Block Wave wallpaper",
+      "themer/GitHub Universe/Octagon wallpaper",
+      "themer/GitHub Universe/Triangles wallpaper"
     ]
   },
   "packages": {
     "wget": {
-      "brew": "wget",
       "apt": "wget",
       "yum": "wget"
     },
     "tmux": {
-      "brew": "tmux",
       "apt": "tmux",
       "yum": "tmux"
     },
-    "reattach-to-user-namespace": {
-      "brew": "reattach-to-user-namespace"
-    },
-    "mpv": {
-      "brew": "mpv --with-libcaca"
-    },
-    "neovim": {
-      "brew": "neovim",
-      "apt": "neovim",
-      "yum": "neovim"
-    },
     "cmatrix": {
-      "brew": "cmatrix",
       "apt": "cmatrix",
       "yum": "cmatrix"
     },
     "the_silver_searcher": {
-      "brew": "the_silver_searcher",
       "apt": "the_silver_searcher",
       "yum": "the_silver_searcher"
     },
     "tig": {
-      "brew": "tig",
       "apt": "tig",
       "yum": "tig"
     },
     "pandoc": {
-      "brew": "pandoc",
       "apt": "pandoc",
       "yum": "pandoc"
     },
     "lynx": {
-      "brew": "lynx",
       "apt": "lynx",
       "yum": "lynx"
     },
     "zsh": {
-      "brew": "zsh",
       "apt": "zsh",
       "yum": "zsh"
     },
     "python": {
-      "brew": "python",
       "apt": "python",
       "yum": "python"
     },
     "fftw": {
-      "brew": "fftw",
       "apt": "fftw",
       "yum": "fftw"
     },
     "ncurses": {
-      "brew": "ncurses",
       "apt": "ncurses",
       "yum": "ncurses"
     }
   },
-  "pip": {
-    "Pillow": {
-      "version": "5.0.0"
-    },
-    "drawille": {
-      "version": "0.1.0"
-    }
-  },
+  "pip": {},
   "npm": {
-    "themer-colors-github-universe": "latest",
-    "themer-tmux": "latest",
-    "themer-vim": "latest",
-    "themer-iterm": "latest",
-    "themer-wallpaper-octagon": "latest",
-    "themer-wallpaper-triangles": "latest",
-    "themer-chrome": "latest",
-    "themer-slack": "latest",
-    "themer-jetbrains": "latest",
-    "themer-wallpaper-block-wave": "latest"
+    "themer": "latest"
   }
 }

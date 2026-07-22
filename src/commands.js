@@ -13,22 +13,126 @@ import * as util from "./util"
 
 import defaultConfig from "../config.json"
 
-let config = _.cloneDeep(defaultConfig)
-let userConfig = {}
+const brewfilePath = path.join(__dirname, "../Brewfile")
+const ohMyZshInstallUrl = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+const vundleRepoUrl = "https://github.com/VundleVim/Vundle.vim.git"
+const commandTimeoutMs = 5 * 60 * 1000
+const warningOutputLines = 40
 
-if (fs.existsSync(`${userHome}/.shellfection.json`)) {
-  userConfig = JSON.parse(fs.readFileSync(`${userHome}/.shellfection.json`))
+const shellQuote = (value) => `'${value.replace(/'/g, "'\\''")}'`
 
-  config.casks = _.union(defaultConfig.casks, userConfig.casks)
-  config.clones = _.unionBy(defaultConfig.clones, userConfig.clones, (o) => JSON.stringify(o))
-  config.gist = userConfig.gist
-  config.gists = _.union(defaultConfig.gists, userConfig.gists)
-  config.packages = _.merge(defaultConfig.packages, userConfig.packages)
-  config.pip = _.merge(defaultConfig.pip, userConfig.pip)
-  config.npm = _.merge(defaultConfig.npm, userConfig.npm)
-  config.symlinks = _.unionBy(defaultConfig.symlinks, userConfig.symlinks, (o) => JSON.stringify(o))
-  config.themer = _.merge(defaultConfig.themer, userConfig.themer)
+const getCommandOutput = (err) => [err.stdout, err.stderr]
+  .filter(output => output && output.trim())
+  .join("\n")
+  .trim()
+
+const tailOutput = (output, lineCount = warningOutputLines) => {
+  const lines = output.split(/\r?\n/).filter(line => line.length)
+
+  return lines.slice(-lineCount).join("\n")
 }
+
+export const formatSetupWarning = (err, options = {}) => {
+  const output = getCommandOutput(err)
+
+  if (!output) {
+    return err.message
+  }
+
+  const displayedOutput = options.verbose ? output : tailOutput(output)
+  const outputLabel = options.verbose
+    ? "command output"
+    : `last ${warningOutputLines} output lines`
+
+  return `${err.message}\n${outputLabel}:\n${displayedOutput}`
+}
+
+const silentSpinner = {
+  setSpinnerTitle: () => {},
+  setSpinnerString: () => {},
+  start: () => {},
+  stop: () => {},
+}
+
+export const runSetupCommand = (label, command, options = {}, spinner = silentSpinner, runCommand = exec, execOptions = {}) => {
+  const verbose = Boolean(options.verbose)
+  const env = {
+    ...process.env,
+    ...execOptions.env,
+  }
+  const timeout = execOptions.timeout || commandTimeoutMs
+
+  spinner.stop(true)
+  console.log(`${label}...`.cyan)
+
+  if (verbose) {
+    console.log(`$ ${command}`.yellow)
+  }
+
+  return new Promise((resolve, reject) => {
+    let streamingOutput = false
+    const child = runCommand(command, {
+      ...execOptions,
+      env,
+      timeout,
+      maxBuffer: execOptions.maxBuffer || 1024 * 1024 * 10,
+    }, (err, stdout = "", stderr = "") => {
+      if (verbose && !streamingOutput && stdout) {
+        process.stdout.write(stdout)
+      }
+      if ((verbose || err) && !streamingOutput && stderr) {
+        process.stderr.write(stderr)
+      }
+
+      if (err) {
+        const timeoutMessage = err.killed ? ` after ${timeout}ms` : ""
+        const failed = new Error(`${label} failed${timeoutMessage}: ${err.message}`)
+
+        failed.cause = err
+        failed.stdout = stdout
+        failed.stderr = stderr
+        return reject(failed)
+      }
+
+      resolve({ stdout, stderr })
+    })
+
+    if (verbose && child && child.stdout && child.stderr) {
+      streamingOutput = true
+      child.stdout.on("data", chunk => process.stdout.write(chunk))
+      child.stderr.on("data", chunk => process.stderr.write(chunk))
+    }
+  })
+}
+
+export const loadUserConfig = (homeDir = userHome) => {
+  const configPath = path.join(homeDir, ".shellfection.json")
+
+  if (!fs.existsSync(configPath)) {
+    return {}
+  }
+
+  return JSON.parse(fs.readFileSync(configPath).toString())
+}
+
+export const buildConfig = (baseConfig = defaultConfig, localConfig = {}) => {
+  const mergedConfig = _.cloneDeep(baseConfig)
+
+  mergedConfig.casks = _.union(baseConfig.casks || [], localConfig.casks || [])
+  mergedConfig.clones = _.unionBy(baseConfig.clones || [], localConfig.clones || [], (o) => JSON.stringify(o))
+  mergedConfig.gist = localConfig.gist || baseConfig.gist
+  mergedConfig.gists = _.union(baseConfig.gists || [], localConfig.gists || [])
+  mergedConfig.packages = _.merge({}, baseConfig.packages || {}, localConfig.packages || {})
+  mergedConfig.pip = _.merge({}, baseConfig.pip || {}, localConfig.pip || {})
+  mergedConfig.npm = _.merge({}, baseConfig.npm || {}, localConfig.npm || {})
+  mergedConfig.symlinks = _.unionBy(baseConfig.symlinks || [], localConfig.symlinks || [], (o) => JSON.stringify(o))
+  mergedConfig.themer = _.merge({}, baseConfig.themer || {}, localConfig.themer || {})
+
+  return mergedConfig
+}
+
+let userConfig = loadUserConfig()
+let config = buildConfig(defaultConfig, userConfig)
 
 const { casks, clones, gist, gists, packages, pip, symlinks, themer, npm } = config
 
@@ -80,22 +184,31 @@ export function sync(spinner) {
 
   return util.getOSType()
     .then((osType) => {
+      if (osType === util.OSType.Darwin) {
+        spinner.setSpinnerTitle("writing Brewfile...".blue)
+
+        return util.dumpHomebrewBundle(osType, brewfilePath)
+          .then(() => {
+            spinner.stop(true)
+          })
+      }
+
       spinner.setSpinnerTitle("getting casks and packages...".blue)
 
       return Promise.all([
         util.getCasks(osType),
         util.getPackages(osType),
       ])
-    })
-    .then(([casks, packages]) => {
-      userConfig.casks = casks
-      userConfig.packages = _.merge(packages, userConfig.packages)
+        .then(([casks, packages]) => {
+          userConfig.casks = casks
+          userConfig.packages = _.merge(packages, userConfig.packages)
 
-      spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
+          spinner.setSpinnerTitle("writing to ~/.shellfection.json...".blue)
 
-      fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(userConfig, false, "  "))
+          fs.writeFileSync(`${userHome}/.shellfection.json`, JSON.stringify(userConfig, false, "  "))
 
-      spinner.stop(true)
+          spinner.stop(true)
+        })
     })
 }
 
@@ -180,6 +293,10 @@ export async function gistUpload(spinner) {
 }
 
 export const install = (options, spinner) => {
+  if (options.verbose) {
+    spinner = silentSpinner
+  }
+
   spinner.setSpinnerTitle("detecting OS...".blue)
   spinner.setSpinnerString(11)
   spinner.start()
@@ -194,6 +311,29 @@ export const install = (options, spinner) => {
 
       if (options.skipPackages) {
         return Promise.resolve([osType, []])
+      }
+
+      if (osType === util.OSType.Darwin) {
+        spinner.setSpinnerTitle("installing Homebrew bundle...".blue)
+
+        return util.installHomebrewBundle(osType, brewfilePath)
+          .then((installStatus) => {
+            spinner.stop(true)
+
+            if (installStatus === util.InstallStatus.Installed) {
+              console.log(`${"installed".cyan} ${"Homebrew bundle".green}`)
+            }
+            else if (installStatus === util.InstallStatus.Failed) {
+              console.log(`${"failed to install".cyan} ${"Homebrew bundle".red}`)
+            }
+            else if (installStatus === util.InstallStatus.NoChanges) {
+              console.log(`${"no changes to".cyan} ${"Homebrew bundle".yellow}`)
+            }
+
+            spinner.start()
+
+            return [osType, [installStatus]]
+          })
       }
 
       spinner.setSpinnerTitle("installing packages...".blue)
@@ -240,7 +380,11 @@ export const install = (options, spinner) => {
 
       spinner.start()
 
-      if (options.skipPackages) {
+      if (resultMap.Failed > 0) {
+        throw new Error(`${resultMap.Failed} package install failed`)
+      }
+
+      if (options.skipPackages || osType === util.OSType.Darwin) {
         return Promise.resolve([])
       }
 
@@ -285,62 +429,182 @@ export const install = (options, spinner) => {
 
       spinner.start()
 
-      spinner.setSpinnerTitle("symlinking...".blue)
+      if (resultMap.Failed > 0) {
+        throw new Error(`${resultMap.Failed} cask install failed`)
+      }
 
-      symlinks.forEach(([from, to]) => {
-        spinner.stop(true)
-
-        const exists = fs.existsSync(`${userHome}/${to}`)
-        const clean = options.clean || options.deepClean
-
-        if (clean && exists) {
-          fs.unlinkSync(`${userHome}/${to}`)
-        }
-
-        if (!clean && exists) {
-          console.log(`${"already exists".cyan} ${to.yellow}`)
-        }
-
-        if (!exists || clean) {
-          console.log(`${"symlinked".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
-
-          fs.symlinkSync(`${__dirname}/../${from}`, `${userHome}/${to}`)
-        }
-
-        spinner.start()
-      })
-
-      spinner.setSpinnerTitle("cloning local configuration...".blue)
-
-      clones.forEach(([from, to]) => {
-        spinner.stop(true)
-
-        const exists = fs.existsSync(`${userHome}/${to}`)
-
-        if (options.deepClean && exists) {
-          fse.removeSync(`${userHome}/${to}`)
-        }
-
-        if (!options.deepClean && exists) {
-          console.log(`${"already exists".cyan} ${to.yellow}`)
-        }
-
-        if (!exists || options.deepClean) {
-          console.log(`${"copied".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
-
-          fse.copySync(`${__dirname}/../${from}`, `${userHome}/${to}`)
-        }
-
-        spinner.start()
-      })
+      installSymlinks(symlinks, options, spinner)
+      installClones(clones, options, spinner)
 
       spinner.stop()
 
-      return installNpm(options, spinner)
+      return installOhMyZsh(options, spinner)
     })
+    .then(() => installVundle(options, spinner))
+    .then(() => installNpm(options, spinner))
     .then(() => installThemer(options, spinner))
     .then(() => installPip(options, spinner))
-    .catch(err => console.error(err))
+    .catch((err) => {
+      spinner.stop(true)
+      console.error(err)
+      throw err
+    })
+}
+
+export const getOhMyZshInstallCommand = (homeDir = userHome) => {
+  const zshDir = path.join(homeDir, ".oh-my-zsh")
+
+  return [
+    `HOME=${shellQuote(homeDir)}`,
+    `ZSH=${shellQuote(zshDir)}`,
+    "RUNZSH=no",
+    "CHSH=no",
+    "KEEP_ZSHRC=yes",
+    `sh -c "$(curl -fsSL ${ohMyZshInstallUrl})"`,
+  ].join(" ")
+}
+
+export const installOhMyZsh = (options, spinner, homeDir = userHome, runCommand = exec) => {
+  const zshDir = path.join(homeDir, ".oh-my-zsh")
+
+  if (fs.existsSync(zshDir)) {
+    console.log(`${"already exists".cyan} ${".oh-my-zsh".yellow}`)
+    return Promise.resolve()
+  }
+
+  spinner.setSpinnerTitle("installing oh-my-zsh...".blue)
+
+  return runSetupCommand("installing oh-my-zsh", getOhMyZshInstallCommand(homeDir), options, spinner, runCommand)
+    .then(() => console.log(`${"installed".cyan} ${"oh-my-zsh".yellow}`))
+}
+
+export const getVundleCloneCommand = (homeDir = userHome) => {
+  const vundleDir = path.join(homeDir, ".vim/bundle/Vundle.vim")
+
+  return `git clone ${vundleRepoUrl} ${shellQuote(vundleDir)}`
+}
+
+export const getVundlePluginInstallCommand = (homeDir = userHome) => {
+  return [
+    "if command -v vim >/dev/null 2>&1; then",
+    `HOME=${shellQuote(homeDir)}`,
+    "GIT_TERMINAL_PROMPT=0",
+    "GIT_ASKPASS=true",
+    "vim",
+    "-N",
+    `-u ${shellQuote(path.join(homeDir, ".vimrc"))}`,
+    "-E",
+    "-s",
+    "-c 'PluginInstall!'",
+    "-c 'qall!';",
+    "else echo 'vim not found; skipping Vundle PluginInstall'; fi",
+  ].join(" ")
+}
+
+export const getVundleInstallCommand = (homeDir = userHome) => {
+  const vundleDir = path.join(homeDir, ".vim/bundle/Vundle.vim")
+
+  return [
+    `if [ -d ${shellQuote(vundleDir)} ]; then`,
+    "echo 'already exists .vim/bundle/Vundle.vim';",
+    "else",
+    getVundleCloneCommand(homeDir),
+    "; fi;",
+    getVundlePluginInstallCommand(homeDir),
+  ].join(" ")
+}
+
+export const installVundle = (options, spinner, homeDir = userHome, runCommand = exec) => {
+  const vundleDir = path.join(homeDir, ".vim/bundle/Vundle.vim")
+  const exists = fs.existsSync(vundleDir)
+
+  if (exists) {
+    console.log(`${"already exists".cyan} ${".vim/bundle/Vundle.vim".yellow}`)
+  }
+
+  spinner.setSpinnerTitle("installing Vundle...".blue)
+
+  fs.mkdirSync(path.dirname(vundleDir), { recursive: true })
+
+  const cloneVundle = exists
+    ? Promise.resolve()
+    : runSetupCommand("cloning Vundle", getVundleCloneCommand(homeDir), options, spinner, runCommand, {
+      env: {
+        GIT_TERMINAL_PROMPT: "0",
+        GIT_ASKPASS: "true",
+      },
+    })
+
+  return cloneVundle
+    .then(() => runSetupCommand("running Vundle PluginInstall", getVundlePluginInstallCommand(homeDir), options, spinner, runCommand, {
+      env: {
+        GIT_TERMINAL_PROMPT: "0",
+        GIT_ASKPASS: "true",
+      },
+      timeout: commandTimeoutMs,
+    }).catch((err) => {
+      console.warn(`${"warning".yellow} Vundle PluginInstall exited non-zero; continuing because Vim plugins are optional.\n${formatSetupWarning(err, options)}`)
+    }))
+    .then(() => {
+      console.log(`${"finished".cyan} ${"Vundle setup".yellow}`)
+    })
+}
+
+export const installSymlinks = (links, options, spinner, homeDir = userHome, sourceDir = path.resolve(__dirname, "..")) => {
+  spinner.setSpinnerTitle("symlinking...".blue)
+
+  links.forEach(([from, to]) => {
+    spinner.stop(true)
+
+    const targetPath = path.join(homeDir, to)
+    const exists = fs.existsSync(targetPath)
+    const clean = options.clean || options.deepClean || options.force
+
+    if (clean && exists) {
+      fs.unlinkSync(targetPath)
+    }
+
+    if (!clean && exists) {
+      console.log(`${"already exists".cyan} ${to.yellow}`)
+    }
+
+    if (!exists || clean) {
+      console.log(`${"symlinked".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
+
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true })
+      fs.symlinkSync(path.join(sourceDir, from), targetPath)
+    }
+
+    spinner.start()
+  })
+}
+
+export const installClones = (cloneEntries, options, spinner, homeDir = userHome, sourceDir = path.resolve(__dirname, "..")) => {
+  spinner.setSpinnerTitle("cloning local configuration...".blue)
+
+  cloneEntries.forEach(([from, to]) => {
+    spinner.stop(true)
+
+    const targetPath = path.join(homeDir, to)
+    const exists = fs.existsSync(targetPath)
+
+    if ((options.deepClean || options.force) && exists) {
+      fse.removeSync(targetPath)
+    }
+
+    if (!options.deepClean && !options.force && exists) {
+      console.log(`${"already exists".cyan} ${to.yellow}`)
+    }
+
+    if (!exists || options.deepClean || options.force) {
+      console.log(`${"copied".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
+
+      fs.mkdirSync(path.dirname(targetPath), { recursive: true })
+      fse.copySync(path.join(sourceDir, from), targetPath)
+    }
+
+    spinner.start()
+  })
 }
 
 export const installNpm = (options, spinner) => {
@@ -394,57 +658,57 @@ export const installThemer = (options, spinner) => {
 
     const templates = themer.templates.map(t => `-t ${t}`).join(" ")
 
-    exec(`themer -c ${themer.colorscheme} ${templates} -o ${__dirname}/../themer`, (err) => {
-      if (err) {
-        reject(err)
-      }
-
-      spinner.stop(true)
-
-      console.log(`${"successfully built themer files in".cyan} ${"themer".yellow}`)
-
-      spinner.start()
-
-      spinner.setSpinnerTitle("symlinking theme files...".blue)
-
-      themer.symlinks.forEach(([from, to]) => {
+    runSetupCommand("building themer", `themer -c ${themer.colorscheme} ${templates} -o ${__dirname}/../themer`, options, spinner)
+      .then(() => {
         spinner.stop(true)
 
-        const exists = fs.existsSync(`${userHome}/${to}`)
-
-        if (exists) {
-          fs.unlinkSync(`${userHome}/${to}`)
-        }
-
-        console.log(`${"symlinked".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
-
-        fs.symlinkSync(`${__dirname}/../${from}`, `${userHome}/${to}`)
+        console.log(`${"successfully built themer files in".cyan} ${"themer".yellow}`)
 
         spinner.start()
-      })
 
-      spinner.setSpinnerTitle("converting wallpapers...".blue)
+        spinner.setSpinnerTitle("symlinking theme files...".blue)
 
-      const log = console.log
-
-      console.log = () => {}
-
-      Promise.all(themer.svgToPngDirectories.map(spdir => {
-        const svgFiles = fs.readdirSync(`${__dirname}/../${spdir}`).filter(name => /\.svg$/.test(name))
-
-        return Promise.all(svgFiles.map(svgFile =>
-          convertSvgToPng(`${__dirname}/../${spdir}/${svgFile}`, `${__dirname}/../${spdir}`)
-        ))
-      }).reduce((a, b) => a.concat(b), []))
-        .then((result) => {
-          console.log = log
-
+        themer.symlinks.forEach(([from, to]) => {
           spinner.stop(true)
 
-          console.log(`${"successfully converted".cyan} ${result.length.toString().yellow} ${"directories of svgs to pngs".cyan}`)
+          const targetPath = path.join(userHome, to)
+          const exists = fs.existsSync(targetPath)
 
-          resolve()
+          if (exists) {
+            fs.unlinkSync(targetPath)
+          }
+
+          console.log(`${"symlinked".cyan} ${from.yellow} ${"to".cyan} ${to.yellow}`)
+
+          fs.mkdirSync(path.dirname(targetPath), { recursive: true })
+          fs.symlinkSync(path.join(__dirname, "..", from), targetPath)
+
+          spinner.start()
         })
-    })
+
+        spinner.setSpinnerTitle("converting wallpapers...".blue)
+
+        const log = console.log
+
+        console.log = () => {}
+
+        Promise.all(themer.svgToPngDirectories.map(spdir => {
+          const svgFiles = fs.readdirSync(`${__dirname}/../${spdir}`).filter(name => /\.svg$/.test(name))
+
+          return Promise.all(svgFiles.map(svgFile =>
+            convertSvgToPng(`${__dirname}/../${spdir}/${svgFile}`, `${__dirname}/../${spdir}`)
+          ))
+        }).reduce((a, b) => a.concat(b), []))
+          .then((result) => {
+            console.log = log
+
+            spinner.stop(true)
+
+            console.log(`${"successfully converted".cyan} ${result.length.toString().yellow} ${"directories of svgs to pngs".cyan}`)
+
+            resolve()
+          })
+      })
+      .catch(reject)
   })
 }

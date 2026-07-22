@@ -70,7 +70,7 @@ export const getPackages = (osType) => {
 
 export const installPackage = (osType, pkg) => {
   if (osType === OSType.Darwin) {
-    return installDarwinPackage(pkg)
+    return Promise.resolve()
   }
   else if (osType === OSType.LinuxApt) {
     return installAptPackage(pkg)
@@ -84,17 +84,16 @@ export const installPackage = (osType, pkg) => {
 
 export const installCask = (osType, cask) => {
   if (osType === OSType.Darwin) {
-    return installDarwinCask(cask)
+    return Promise.resolve()
   }
 
   return Promise.reject(new Error(`cannot install cask "${cask}" on unknown OSType "${osType}"`))
 }
 
 export const getInstallCommands = {
-  brewList: (pkg) => `brew list ${pkg} &>/dev/null`,
-  brewInstall: (pkg) => `brew install -y ${pkg}`,
-  brewCaskList: (cask) => `brew cask list ${cask} &>/dev/null`,
-  brewCaskInstall: (cask) => `brew cask install -y ${cask}`,
+  brewBundleCheck: (brewfilePath) => `brew bundle check --file ${brewfilePath}`,
+  brewBundleDump: (brewfilePath) => `brew bundle dump --file ${brewfilePath} --force`,
+  brewBundleInstall: (brewfilePath) => `brew bundle install --file ${brewfilePath}`,
   aptInstall: (pkg) => `apt-get install -y ${pkg}`,
   yumInstall: (pkg) => `yum install -y ${pkg}`,
   pipInstall: (pkg) => `pip install ${pkg}`,
@@ -117,15 +116,15 @@ export const series = (farr) => {
   return helper(farr)
 }
 
-const installDarwinPackage = (pkg) => {
-  if (!pkg.brew) {
-    return Promise.resolve()
+export const installHomebrewBundle = (osType, brewfilePath) => {
+  if (osType !== OSType.Darwin) {
+    return Promise.resolve(InstallStatus.NoChanges)
   }
 
   return new Promise((resolve) => {
-    exec(getInstallCommands.brewList(pkg.brew), (err) => {
+    exec(getInstallCommands.brewBundleCheck(brewfilePath), (err) => {
       if (err) {
-        return exec(getInstallCommands.brewInstall(pkg.brew), (err) => {
+        return exec(getInstallCommands.brewBundleInstall(brewfilePath), (err) => {
           if (err) {
             return resolve(InstallStatus.Failed)
           }
@@ -139,27 +138,25 @@ const installDarwinPackage = (pkg) => {
   })
 }
 
-const installDarwinCask = (cask) => {
-  return new Promise((resolve) => {
-    exec(getInstallCommands.brewCaskList(cask), (err) => {
-      if (err) {
-        return exec(getInstallCommands.brewCaskInstall(cask), (err) => {
-          if (err) {
-            return resolve(InstallStatus.Failed)
-          }
+export const dumpHomebrewBundle = (osType, brewfilePath) => {
+  if (osType !== OSType.Darwin) {
+    return Promise.resolve()
+  }
 
-          resolve(InstallStatus.Installed)
-        })
+  return new Promise((resolve, reject) => {
+    exec(getInstallCommands.brewBundleDump(brewfilePath), (err) => {
+      if (err) {
+        return reject(err)
       }
 
-      resolve(InstallStatus.NoChanges)
+      resolve()
     })
   })
 }
 
 const getDarwinCasks = () => {
   return new Promise((resolve, reject) => {
-    exec("brew cask ls -1", (err, stdout) => {
+    exec("brew list --cask -1", (err, stdout) => {
       if (err) {
         reject(err)
       }
@@ -171,7 +168,7 @@ const getDarwinCasks = () => {
 
 const getDarwinPackages = () => {
   return new Promise((resolve, reject) => {
-    exec("brew ls -1", (err, stdout) => {
+    exec("brew list --formula -1", (err, stdout) => {
       if (err) {
         reject(err)
       }
